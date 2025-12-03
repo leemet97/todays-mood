@@ -210,7 +210,12 @@ const WeeklyChart = ({ data }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={data}>
-        <XAxis dataKey="day" />
+        <XAxis
+          dataKey="day"
+          interval={0}
+          tickMargin={8}
+          padding={{ left: 10, right: 10 }}
+        />
         <YAxis hide />
         <Tooltip />
         <Line
@@ -260,7 +265,10 @@ export default function Dashboard() {
         </div>
 
         <UserSelect
-          onChange={(e) => setCurrentUserId(Number(e.target.value))}
+          onChange={(e) => {
+            setCurrentUserId(Number(e.target.value));
+            setShowNurse(true);
+          }}
           value={currentUserId}
         >
           {usersData.map((u) => (

@@ -1,9 +1,9 @@
-// src/components/WeatherBox.jsx
+// 🌤 WeatherBox.jsx
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 
 // =============================
-// 🌤 Styled Components 정의
+// Styled Components
 // =============================
 const Box = styled.div`
   position: fixed;
@@ -11,12 +11,10 @@ const Box = styled.div`
   bottom: 20px;
   width: 220px;
   padding: 18px 20px;
-
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(12px);
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.4);
-
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   z-index: 100;
 
@@ -86,7 +84,6 @@ const ReopenButton = styled.button`
   right: 20px;
   bottom: 20px;
   padding: 10px 14px;
-
   background: #ffdca8;
   border-radius: 10px;
   border: none;
@@ -102,7 +99,7 @@ const ReopenButton = styled.button`
 `;
 
 // =============================
-// 🌤 WeatherBox 컴포넌트
+// WeatherBox Component
 // =============================
 export default function WeatherBox() {
   const [temp, setTemp] = useState(null);
@@ -113,15 +110,18 @@ export default function WeatherBox() {
 
   const API_KEY = import.meta.env.VITE_WEATHER_KEY;
 
+  // 앱 로딩 시 → 기본 서울 날씨만 불러옴
   useEffect(() => {
     if (!API_KEY) {
       setComment("API 키 오류 🔑");
       return;
     }
-    loadWeatherByGPS();
+    loadWeatherByCity("Seoul");
   }, []);
 
-  // ===== GPS 기반 날씨 =====
+  // =============================
+  // GPS 기반 날씨 (사용자 요청 시만 실행)
+  // =============================
   function loadWeatherByGPS() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -135,14 +135,16 @@ export default function WeatherBox() {
           const data = await res.json();
           updateUI(data);
         } catch {
-          loadWeatherByCity("Seoul");
+          setComment("GPS로 날씨를 가져올 수 없어요 😢");
         }
       },
-      () => loadWeatherByCity("Seoul")
+      () => {
+        setComment("위치 권한이 필요해요 📍");
+      }
     );
   }
 
-  // ===== 도시 기반 날씨 =====
+  // 도시 기반 날씨
   async function loadWeatherByCity(cityName) {
     try {
       const res = await fetch(
@@ -173,9 +175,6 @@ export default function WeatherBox() {
     return "좋은 하루 보내세요 🌿";
   };
 
-  // =============================
-  // 숨김 버튼 처리
-  // =============================
   if (hidden) {
     return (
       <ReopenButton onClick={() => setHidden(false)}>🌤 날씨 보기</ReopenButton>
@@ -190,6 +189,7 @@ export default function WeatherBox() {
       <MainText>{city}</MainText>
       <Comment>{comment}</Comment>
 
+      {/* 도시 선택 */}
       <Select
         onChange={(e) =>
           e.target.value === "gps"
@@ -197,8 +197,8 @@ export default function WeatherBox() {
             : loadWeatherByCity(e.target.value)
         }
       >
-        <option value="gps">현재 위치</option>
         <option value="Seoul">서울</option>
+        <option value="gps">📍 현재 위치(사용자 요청)</option>
         <option value="Busan">부산</option>
         <option value="Incheon">인천</option>
         <option value="Daegu">대구</option>

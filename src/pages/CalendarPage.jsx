@@ -212,7 +212,7 @@ const CalendarPage = () => {
               <div style={{ fontSize: "50px", marginBottom: "20px" }}>📭</div>
               기록된 내용이 없습니다.
               <br />
-              (24일이나 20일을 클릭해보세요!)
+              (11월 24일이나 20일을 클릭해보세요!)
             </div>
           )}
         </LogCard>
