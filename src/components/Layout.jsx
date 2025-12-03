@@ -1,31 +1,56 @@
 // src/components/Layout.jsx
 import React from "react";
-import { Outlet } from "react-router-dom"; // 👈 1. 이 줄이 있는지 확인!
+import { Outlet } from "react-router-dom";
 import styled from "styled-components";
 import Sidebar from "./Sidebar";
+import WeatherBox from "./WeatherBox";
 
-const LayoutContainer = styled.div`
-  display: flex;
-  width: 100vw;
+const LayoutWrapper = styled.div`
+  display: grid;
+  grid-template-columns: 240px 1fr;
   height: 100vh;
-  background-color: #f5f6fa;
+  background: #f6f8fa;
+
+  /* 모바일에서는 grid → flex로 변경 */
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
 `;
 
-const MainContent = styled.main`
-  flex: 1; /* 남은 오른쪽 공간 다 차지 */
-  padding: 30px;
+const SidebarArea = styled.aside`
+  background: white;
+  border-right: 1px solid #e5e5e5;
+  padding: 30px 20px;
+  @media (max-width: 768px) {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #eee;
+  }
+`;
+
+const MainArea = styled.main`
   overflow-y: auto;
+  padding: 30px 40px;
+
+  @media (max-width: 768px) {
+    padding: 18px;
+  }
 `;
 
 const Layout = () => {
   return (
-    <LayoutContainer>
-      <Sidebar />
-      {/* 👇 2. 여기가 핵심입니다! Outlet이 없으면 오른쪽이 텅 빕니다! */}
-      <MainContent>
+    <LayoutWrapper>
+      <SidebarArea>
+        <Sidebar />
+      </SidebarArea>
+
+      <MainArea>
+        <WeatherBox />
         <Outlet />
-      </MainContent>
-    </LayoutContainer>
+      </MainArea>
+    </LayoutWrapper>
   );
 };
 

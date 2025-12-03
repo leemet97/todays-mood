@@ -1,6 +1,7 @@
 // src/pages/Dashboard.jsx
 import React, { useState } from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
+
 import {
   FaBed,
   FaUtensils,
@@ -9,53 +10,51 @@ import {
   FaCamera,
   FaWalking,
 } from "react-icons/fa";
-// 차트 라이브러리
+
+import { usersData, weeklyData } from "../data/mockData";
+
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
+  YAxis,
   Tooltip,
   ResponsiveContainer,
-  Cell,
 } from "recharts";
-// 데이터 불러오기
-import { usersData, weeklyData, todaySchedule } from "../data/mockData";
 
-// ==============================================
-// 🎨 스타일 정의 (컴포넌트 밖)
-// ==============================================
+// ===================== Colors =====================
+const colors = {
+  mint: "#79D8C8",
+  mintDeep: "#4BC3AF",
+  mintDark: "#2DAA97",
+  bg: "#E9F7F5",
+};
 
+// 전체 박스
 const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  height: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  padding: 10px 10px 60px 10px;
 `;
 
-const UserSelect = styled.select`
-  padding: 10px 15px;
-  border-radius: 12px;
-  border: 2px solid #ff9f43;
-  font-size: 16px;
-  font-weight: bold;
+// 제목
+const SectionTitle = styled.h1`
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 20px;
   color: #333;
-  font-family: "Jua", sans-serif;
-  cursor: pointer;
-  outline: none;
-  background: white;
-  margin-left: auto;
+  border-bottom: 3px solid ${colors.mintDeep};
+  width: fit-content;
 `;
 
+// ===================== TOP CARD =====================
 const TopMoodSection = styled.div`
-  background-color: white;
+  background: white;
   border-radius: 20px;
   padding: 30px;
   display: flex;
   align-items: center;
   gap: 30px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 
   .emoji {
     font-size: 60px;
@@ -63,63 +62,81 @@ const TopMoodSection = styled.div`
   .text-box {
     flex: 1;
   }
-  .text-box h2 {
-    margin: 0;
-    font-size: 24px;
-    color: #333;
-  }
-  .text-box p {
-    margin: 5px 0 0;
-    color: #666;
-    font-size: 16px;
-  }
   .highlight {
-    color: #ff9f43;
+    color: ${colors.mintDeep};
     font-weight: bold;
   }
-`;
 
-const BottomSection = styled.div`
-  display: flex;
-  gap: 20px;
-  flex: 1;
-
-  @media (max-width: 900px) {
+  @media (max-width: 768px) {
     flex-direction: column;
+    text-align: center;
   }
 `;
 
-const LeftColumn = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+const UserSelect = styled.select`
+  padding: 12px 15px;
+  border-radius: 14px;
+  border: 2px solid ${colors.mintDeep};
+  background: white;
+  font-size: 16px;
+  font-weight: bold;
 `;
 
-const LeftGrid = styled.div`
+// ===================== Nurse Card =====================
+const NurseMintCard = styled.div`
+  background: ${colors.mint};
+  padding: 22px;
+  border-radius: 18px;
+  color: white;
+  font-size: 18px;
+  text-align: center;
+  cursor: pointer;
+  margin: 20px auto;
+  max-width: 600px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+
+  small {
+    display: block;
+    margin-top: 6px;
+    font-size: 14px;
+    opacity: 0.9;
+  }
+`;
+
+// ===================== CARD GRID =====================
+const CardGrid = styled.div`
+  margin-top: 20px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 `;
 
 const MenuCard = styled.div`
-  background-color: ${(props) => (props.$active ? "#FF9F43" : "white")};
-  color: ${(props) => (props.$active ? "white" : "#4A4A4A")};
-  padding: 20px;
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  background-color: ${(p) => (p.$active ? colors.mintDark : "white")};
+  color: ${(p) => (p.$active ? "white" : "#333")};
+  padding: 24px;
+  border-radius: 18px;
+  text-align: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: 0.25s;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  position: relative;
 
   &:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px);
   }
+
   .icon {
-    font-size: 28px;
+    font-size: 30px;
+    margin-bottom: 10px;
   }
   .label {
     font-size: 18px;
@@ -127,119 +144,95 @@ const MenuCard = styled.div`
   }
 `;
 
-const ScheduleBox = styled.div`
-  background: white;
-  padding: 25px;
-  border-radius: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-  flex: 1;
+// ===================== MOBILE DETAIL (카드 바로 아래) =====================
+const MobileDetail = styled.div`
+  display: none;
 
-  h3 {
-    margin: 0 0 20px 0;
-    font-size: 18px;
-    color: #555;
+  @media (max-width: 768px) {
+    display: block;
+    background: #ffffff;
+    margin-top: 10px;
+    border-radius: 15px;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    transition: all 0.3s ease;
+
+    ${(p) =>
+      p.open
+        ? css`
+            max-height: 300px;
+            padding: 16px;
+            opacity: 1;
+          `
+        : css`
+            max-height: 0;
+            padding: 0 16px;
+            opacity: 0;
+          `}
   }
 `;
 
-const ScheduleItem = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 15px;
-  border-bottom: 1px dashed #eee;
-  font-size: 16px;
-
-  color: ${(props) => (props.$done ? "#aaa" : "#333")};
-  text-decoration: ${(props) => (props.$done ? "line-through" : "none")};
-
-  font-weight: ${(props) =>
-    !props.$done && props.$isNext ? "bold" : "normal"};
-  color: ${(props) => (!props.$done && props.$isNext ? "#FF9F43" : "")};
-
-  &:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-  }
-`;
-
-const RightDetail = styled.div`
-  flex: 1.2;
-  display: flex;
-  flex-direction: column;
+// ===================== RIGHT CHART =====================
+const MiddleWrap = styled.div`
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
   gap: 20px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
-const DetailBox = styled.div`
-  background-color: white;
+const ChartBox = styled.div`
+  background: white;
+  padding: 20px;
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  height: 320px;
+`;
+
+// ===================== DESKTOP DETAIL =====================
+const DesktopDetail = styled.div`
+  background: white;
   padding: 30px;
   border-radius: 20px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-  flex: 1;
-
-  h3 {
-    margin-top: 0;
-    color: #888;
-    font-size: 16px;
-    margin-bottom: 15px;
-  }
-  p {
-    font-size: 22px;
-    line-height: 1.5;
-    color: #333;
-    font-weight: bold;
-    margin-bottom: 10px;
-  }
-  .detail-text {
-    font-size: 16px;
-    color: #666;
-    font-weight: normal;
-  }
-`;
-
-const ChartWrapper = styled.div`
-  width: 100%;
-  height: 220px;
   margin-top: 30px;
-  background-color: #fafafa;
-  border-radius: 15px;
-  padding: 20px;
-  box-sizing: border-box;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 
-  h4 {
-    margin: 0 0 10px 0;
-    font-size: 14px;
-    color: #aaa;
+  @media (max-width: 768px) {
+    display: none;
   }
 `;
 
-const NurseCommentBox = styled(DetailBox)`
-  background-color: #fff5f5;
-  border: 1px solid #ffe0e0;
-  flex: 0.4;
+// ===================== 7일 그래프 =====================
+const WeeklyChart = ({ data }) => {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={data}>
+        <XAxis dataKey="day" />
+        <YAxis hide />
+        <Tooltip />
+        <Line
+          type="monotone"
+          dataKey="value"
+          stroke="#4BC3AF"
+          strokeWidth={3}
+          dot={{ r: 4 }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+};
 
-  h3 {
-    color: #ff6b6b;
-  }
-  p {
-    font-size: 18px;
-    font-weight: normal;
-  }
-`;
-
-// ==============================================
-// 🚀 컴포넌트 로직 시작
-// ==============================================
-
-const Dashboard = () => {
+// ===================== MAIN FUNCTION =====================
+export default function Dashboard() {
   const [selected, setSelected] = useState("수면");
   const [currentUserId, setCurrentUserId] = useState(0);
+  const [showNurse, setShowNurse] = useState(true);
 
-  // [NEW] 사진 미리보기용 State
-  const [previewImage, setPreviewImage] = useState(null);
-
-  // 현재 선택된 어르신 데이터
-  const currentUserData = usersData[currentUserId] || usersData[0];
+  const currentUser = usersData[currentUserId];
+  const weeklyChartData = weeklyData[selected] || weeklyData["default"];
 
   const icons = {
     수면: <FaBed />,
@@ -250,202 +243,86 @@ const Dashboard = () => {
     사진: <FaCamera />,
   };
 
-  // 차트 데이터 및 일과표 인덱스
-  const chartData = weeklyData[selected] || weeklyData["default"];
-  const nextScheduleIndex = todaySchedule.findIndex((item) => !item.done);
-
-  // 어르신 변경 핸들러
-  const handleUserChange = (e) => {
-    setCurrentUserId(Number(e.target.value));
-    setPreviewImage(null); // 어르신 바뀌면 미리보기 초기화
-  };
-
-  // [NEW] 사진 선택 핸들러
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setPreviewImage(imageUrl);
-    }
-  };
-
   return (
     <Container>
-      {/* 1. 상단 헤더 & 어르신 선택 */}
+      <SectionTitle>오늘의 건강날씨 🌿</SectionTitle>
+
+      {/* 상단 상태 카드 */}
       <TopMoodSection>
-        <div className="emoji">
-          {currentUserData.user.mood.split(" ")[1] || "🥰"}
-        </div>
+        <div className="emoji">{currentUser.user.mood.split(" ")[1]}</div>
+
         <div className="text-box">
           <h2>
-            오늘 <span className="highlight">{currentUserData.user.name}</span>{" "}
-            님은 <span className="highlight">{currentUserData.user.mood}</span>{" "}
-            입니다.
+            오늘 <span className="highlight">{currentUser.user.name}</span> 님은{" "}
+            <span className="highlight">{currentUser.user.mood}</span> 입니다.
           </h2>
-          <p>{currentUserData.user.date} 기록</p>
+          <p>{currentUser.user.date} 기록</p>
         </div>
 
-        <UserSelect onChange={handleUserChange} value={currentUserId}>
-          {usersData.map((data) => (
-            <option key={data.id} value={data.id}>
-              {data.user.name} 님 ({data.user.room})
+        <UserSelect
+          onChange={(e) => setCurrentUserId(Number(e.target.value))}
+          value={currentUserId}
+        >
+          {usersData.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.user.name} ({u.user.room})
             </option>
           ))}
         </UserSelect>
       </TopMoodSection>
 
-      {/* 2. 하단 좌우 분할 */}
-      <BottomSection>
-        {/* [왼쪽] 카드 그리드 + 일과표 */}
-        <LeftColumn>
-          <LeftGrid>
-            {Object.keys(currentUserData.status).map((key) => (
-              <MenuCard
-                key={key}
-                $active={selected === key}
-                onClick={() => setSelected(key)}
-              >
-                <div className="icon">{icons[key]}</div>
-                <div className="label">{key}</div>
-              </MenuCard>
-            ))}
-          </LeftGrid>
+      {/* 간호사 카드 */}
+      {showNurse && (
+        <NurseMintCard onClick={() => setShowNurse(false)}>
+          👩‍⚕️ {currentUser.nurseComment}
+          <small>👉 터치하면 기록 카드가 열립니다.</small>
+        </NurseMintCard>
+      )}
 
-          <ScheduleBox>
-            <h3>🕒 오늘의 일과표</h3>
-            {todaySchedule.map((item, idx) => (
-              <ScheduleItem
-                key={idx}
-                $done={item.done}
-                $isNext={idx === nextScheduleIndex}
-              >
-                <span style={{ fontWeight: "bold" }}>{item.time}</span>
-                <span>{item.activity}</span>
-              </ScheduleItem>
-            ))}
-          </ScheduleBox>
-        </LeftColumn>
-
-        {/* [오른쪽] 상세 기록 + (사진업로드 OR 그래프) */}
-        <RightDetail>
-          <DetailBox>
-            <h3>📌 {selected} 상세 기록</h3>
-            <p>{currentUserData.status[selected].text}</p>
-            <div className="detail-text">
-              ℹ️ {currentUserData.status[selected].detail}
-            </div>
-
-            {/* 👇 조건부 렌더링: '사진' 탭이면 업로더, 아니면 그래프 보여주기 👇 */}
-            {selected === "사진" ? (
-              // [사진 업로드 UI]
-              <div style={{ marginTop: "30px" }}>
-                <input
-                  type="file"
-                  accept="image/*"
-                  id="photo-upload"
-                  style={{ display: "none" }}
-                  onChange={handleImageChange}
-                />
-                <label
-                  htmlFor="photo-upload"
-                  style={{
-                    display: "inline-block",
-                    padding: "10px 20px",
-                    backgroundColor: "#FF9F43",
-                    color: "white",
-                    borderRadius: "12px",
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                    marginBottom: "20px",
-                  }}
+      {/* 카드 + 차트 2열 */}
+      {!showNurse && (
+        <MiddleWrap>
+          {/* 왼쪽 카드 */}
+          <div>
+            <CardGrid>
+              {Object.keys(currentUser.status).map((key) => (
+                <MenuCard
+                  key={key}
+                  $active={selected === key}
+                  onClick={() => setSelected(key)}
                 >
-                  📸 새 사진 추가하기 +
-                </label>
+                  <div className="icon">{icons[key]}</div>
+                  <div className="label">{key}</div>
 
-                {previewImage ? (
-                  <div style={{ marginTop: "20px" }}>
-                    <img
-                      src={previewImage}
-                      alt="미리보기"
-                      style={{
-                        width: "100%",
-                        borderRadius: "15px",
-                        boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-                      }}
-                    />
-                    <p
-                      style={{
-                        textAlign: "center",
-                        color: "#888",
-                        fontSize: "14px",
-                        marginTop: "10px",
-                      }}
-                    >
-                      방금 추가된 사진입니다.
+                  {/* MOBILE DETAIL — 카드 바로 아래 아코디언 */}
+                  <MobileDetail open={selected === key}>
+                    <h4>📌 {key} 상세 기록</h4>
+                    <p>{currentUser.status[key].text}</p>
+                    <p style={{ color: "#777" }}>
+                      {currentUser.status[key].detail}
                     </p>
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      height: "150px",
-                      backgroundColor: "#f9f9f9",
-                      borderRadius: "15px",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      color: "#aaa",
-                    }}
-                  >
-                    여기에 추가한 사진이 나타납니다.
-                  </div>
-                )}
-              </div>
-            ) : (
-              // [주간 그래프 UI]
-              <ChartWrapper>
-                <h4>📊 최근 7일간 변화 추이</h4>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <XAxis
-                      dataKey="day"
-                      tick={{ fontSize: 12, fill: "#888" }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: "10px",
-                        border: "none",
-                        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-                      }}
-                      cursor={{ fill: "#eee" }}
-                    />
-                    <Bar dataKey="value" radius={[5, 5, 0, 0]} barSize={20}>
-                      {chartData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={
-                            entry.day === "일" || entry.day === "토"
-                              ? "#FF9F43"
-                              : "#FFD1A9"
-                          }
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartWrapper>
-            )}
-          </DetailBox>
+                  </MobileDetail>
+                </MenuCard>
+              ))}
+            </CardGrid>
+          </div>
 
-          <NurseCommentBox>
-            <h3>👩‍⚕️ 간호사 선생님의 한마디</h3>
-            <p>"{currentUserData.nurseComment}"</p>
-          </NurseCommentBox>
-        </RightDetail>
-      </BottomSection>
+          {/* 오른쪽 7일 차트 (PC 기준) */}
+          <ChartBox>
+            <h3>📈 지난 7일 {selected} 변화</h3>
+            <WeeklyChart data={weeklyChartData} />
+          </ChartBox>
+        </MiddleWrap>
+      )}
+
+      {/* 데스크탑 상세 (아래 전체 폭) */}
+      {!showNurse && (
+        <DesktopDetail>
+          <h3>📌 {selected} 상세 기록</h3>
+          <p>{currentUser.status[selected].text}</p>
+          <p style={{ color: "#777" }}>{currentUser.status[selected].detail}</p>
+        </DesktopDetail>
+      )}
     </Container>
   );
-};
-
-export default Dashboard;
+}
